@@ -1,0 +1,12 @@
+{
+  "name": "promptmate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PromptMate - AI Prompt Agent",
+  "scripts": {
+    "dev": "python run.py",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && python -m pip install -r requirements.txt && cd ../frontend && npm install"
+  }
+}
