@@ -2,93 +2,96 @@
 
 **Transform raw ideas into optimized AI prompts with one click.**
 
-PromptMate is a full-stack AI prompt agent that analyzes your unstructured text, classifies the use-case (coding, image generation, video generation, creative writing, etc.), and dynamically applies the optimal prompting technique — then lets you launch the result directly into Claude, ChatGPT, Gemini, or Copilot.
-
-![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?logo=openai)
+PromptMate is a full-stack AI prompt agent that analyzes your unstructured text, classifies the use-case (coding, image generation, video generation, creative writing, data analysis, etc.), dynamically applies the optimal prompting technique (Chain-of-Thought, Structured, Persona, Few-Shot, Zero-Shot), and lets you launch directly into Claude, ChatGPT, Gemini, or Copilot.
 
 ---
 
-## ✨ Features
+## 📁 Repository Structure (Backend & Frontend Split)
 
-- **🧠 Agentic Intent Analysis** — Automatically classifies your input into 6 categories using LLM-powered analysis
-- **📝 Smart Prompt Generation** — Applies Chain-of-Thought, Few-Shot, Persona, Structured, or Zero-Shot techniques based on the detected intent
-- **🎤 Voice Input** — Speak your ideas using browser-native Web Speech API (real-time) or upload audio files (OpenAI Whisper)
-- **🚀 Quick Launch Buttons** — One-click redirect to Claude, ChatGPT, Gemini, or Copilot with your prompt pre-filled
-- **📚 Prompt Library** — 6 pre-built templates auto-seeded on startup, plus user-saved favorites
-- **📜 Generation History** — Full history of past generations with recall and delete
-- **🌙 Dark Theme UI** — Polished, modern dark-themed React interface
-
----
-
-## 🏗️ Architecture
+This repository is divided into clean, decoupled directories optimized for separate deployment on **Render** (Backend API) and **Vercel** (Frontend React App), while also supporting unified full-stack execution:
 
 ```
-User Input (text/voice)
-    │
-    ▼
-┌─────────────────────────────┐
-│  FastAPI Backend             │
-│  ┌────────────────────────┐ │
-│  │ 1. Intent Analyzer     │──── OpenAI GPT (classify)
-│  │ 2. Context Assembler   │──── SQLite (fetch template)
-│  │ 3. Prompt Generator    │──── OpenAI GPT (generate)
-│  │ 4. Save to History     │──── SQLite (persist)
-│  └────────────────────────┘ │
-└─────────────────────────────┘
-    │
-    ▼
-React Frontend
-    │
-    ▼
-Quick Launch → Claude / ChatGPT / Gemini / Copilot
+promptmate/
+├── backend/                  # 🖥️ Standalone Node.js & Express API (Deploy on Render)
+│   ├── server.ts             # Express server with Gemini prompt synthesis & audio routes
+│   ├── package.json          # Backend-only dependencies & build scripts
+│   ├── render.yaml           # Render blueprint specification
+│   ├── .env.example          # GEMINI_API_KEY, PORT, FRONTEND_URL
+│   └── README.md             # Detailed Render deployment instructions
+│
+├── frontend/                 # ⚡ Standalone React + Vite SPA (Deploy on Vercel)
+│   ├── src/                  # React components, UI pages, and API client
+│   │   ├── api/promptmate.js # Dynamic API client (supports VITE_API_URL & client fallbacks)
+│   │   ├── components/       # PromptInput, PromptOutput, HistoryPanel, VoiceInput, etc.
+│   │   └── pages/Home.jsx    # Main application dashboard
+│   ├── package.json          # Frontend-only dependencies
+│   ├── vite.config.ts        # Vite configuration with lucide-react optimization
+│   ├── vercel.json           # Vercel SPA routing & cache headers
+│   ├── .env.example          # VITE_API_URL=https://your-backend.onrender.com/api
+│   └── README.md             # Detailed Vercel deployment instructions
+│
+├── render.yaml               # Root Render blueprint (points to backend directory)
+├── vercel.json               # Root Vercel configuration
+├── server.ts                 # Full-stack orchestrator for local preview & containers
+└── package.json              # Unified scripts (dev, build, start, build:backend, build:frontend)
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🌐 Deploying to Render (Backend)
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- OpenAI API key (add to [backend/.env](file:///c:/Users/Agastheshwar/Downloads/Promptmate-main/Promptmate-main/backend/.env))
+1. Go to [dashboard.render.com](https://dashboard.render.com/) and click **New +** ➔ **Web Service**.
+2. Connect your GitHub repository.
+3. Configure the service:
+   - **Name**: `promptmate-backend`
+   - **Root Directory**: `backend`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Instance Type**: `Free`
+4. In **Environment Variables**:
+   - `GEMINI_API_KEY`: Your Gemini API key from [Google AI Studio](https://aistudio.google.com).
+   - `FRONTEND_URL` *(optional)*: Your Vercel frontend URL (e.g., `https://promptmate-frontend.vercel.app`).
+5. Click **Create Web Service**.
+6. Copy your service URL when active: `https://promptmate-backend.onrender.com`.
 
 ---
 
-### Option 1: Run Both Together (Recommended)
+## ⚡ Deploying to Vercel (Frontend)
 
+1. Go to [vercel.com](https://vercel.com/) and click **Add New…** ➔ **Project**.
+2. Import this repository.
+3. Configure the project:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: Click **Edit** and choose `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+4. Expand **Environment Variables**:
+   - **Key**: `VITE_API_URL`
+   - **Value**: `https://promptmate-backend.onrender.com/api` (replace with your actual Render URL).
+5. Click **Deploy**.
+6. Your app is live!
+
+---
+
+## 💻 Local Development
+
+### Option 1: Run Full-Stack Unified (Recommended)
 From the project root:
-
 ```bash
-# Using Python (unified terminal with live logs):
-python run.py
-
-# OR using npm:
+npm install
 npm run dev
-
-# OR on Windows (opens backend and frontend in separate CMD windows):
-.\start.bat
 ```
-
-> **Note:** `run.py` automatically detects dependencies, creates your `.env` if missing, starts both servers concurrently, and cleanly stops both when you press `Ctrl+C`.
-
----
+Runs the full application on `http://localhost:3000` with hot reload and API endpoints.
 
 ### Option 2: Run Separately in 2 Terminals
 
 #### Terminal 1 — Backend:
 ```bash
 cd backend
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-# source venv/bin/activate
-
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+npm install
+npm run dev
+# Backend runs on http://localhost:10000 (or PORT in backend/.env)
 ```
 
 #### Terminal 2 — Frontend:
@@ -96,84 +99,28 @@ uvicorn app.main:app --reload --port 8000
 cd frontend
 npm install
 npm run dev
-```
-
-- **Frontend:** [http://localhost:3000](http://localhost:3000)
-- **Backend API & Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## 📁 Project Structure
-
-```
-promptmate/
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # FastAPI entry point
-│   │   ├── config.py            # Settings from .env
-│   │   ├── database.py          # SQLAlchemy setup
-│   │   ├── models.py            # ORM models
-│   │   ├── schemas.py           # Pydantic schemas
-│   │   ├── seed_data.py         # Default templates
-│   │   ├── routers/
-│   │   │   ├── prompts.py       # POST /api/prompts/generate
-│   │   │   ├── templates.py     # Template CRUD
-│   │   │   ├── history.py       # History & saved prompts
-│   │   │   └── speech.py        # Audio transcription
-│   │   └── services/
-│   │       ├── intent_analyzer.py
-│   │       ├── context_assembler.py
-│   │       ├── prompt_generator.py
-│   │       ├── agent_pipeline.py
-│   │       └── speech_transcriber.py
-│   ├── requirements.txt
-│   └── .env.example
-│
-└── frontend/
-    ├── src/
-    │   ├── api/promptmate.js
-    │   ├── hooks/useSpeechRecognition.js
-    │   ├── components/
-    │   │   ├── PromptInput.jsx
-    │   │   ├── VoiceInput.jsx
-    │   │   ├── PromptOutput.jsx
-    │   │   ├── TalkingButtons.jsx
-    │   │   ├── HistoryPanel.jsx
-    │   │   └── TemplateSelector.jsx
-    │   └── pages/Home.jsx
-    ├── package.json
-    └── vite.config.js
+# Frontend runs on http://localhost:3000, proxying /api to the backend
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 API Endpoints Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/prompts/generate` | Generate an optimized prompt |
-| `GET` | `/api/prompts/{id}` | Get a specific generation |
-| `GET` | `/api/templates` | List all templates |
-| `POST` | `/api/templates` | Create a new template |
-| `GET` | `/api/history` | List generation history |
-| `DELETE` | `/api/history/{id}` | Delete a history entry |
-| `POST` | `/api/history/{id}/save` | Save a generation |
-| `GET` | `/api/saved` | List saved prompts |
-| `POST` | `/api/speech/transcribe` | Transcribe audio file |
-| `POST` | `/api/speech/transcribe-and-generate` | Transcribe + generate in one call |
-
----
-
-## 🎯 Supported Categories & Techniques
-
-| Category | Technique | Use Case |
-|----------|-----------|----------|
-| Coding | Chain-of-Thought | Step-by-step code generation |
-| Image Generation | Structured | Detailed image prompts with style/lighting |
-| Video Generation | Structured | Scene, motion, camera descriptions |
-| Creative Writing | Persona | Role-based storytelling |
-| Data Analysis | Few-Shot | Example-driven insight extraction |
-| General | Zero-Shot | Universal prompt optimization |
+| `GET`  | `/api/health` | Service status and uptime check |
+| `POST` | `/api/prompts/generate` | Generate and optimize prompt using AI |
+| `GET`  | `/api/prompts/:id` | Fetch specific prompt generation |
+| `GET`  | `/api/history` | List prompt generation history |
+| `DELETE`| `/api/history/:id` | Delete history entry |
+| `POST` | `/api/history/:id/save` | Save prompt to favorites |
+| `GET`  | `/api/saved` | List saved favorite prompts |
+| `DELETE`| `/api/saved/:id` | Delete saved prompt |
+| `GET`  | `/api/templates` | Retrieve prompt templates |
+| `POST` | `/api/templates` | Create custom template |
+| `POST` | `/api/speech/transcribe` | Transcribe voice recording via Gemini |
+| `POST` | `/api/speech/transcribe-and-generate` | Transcribe and generate prompt in single step |
+| `GET`  | `/api/stats` | Fast count metrics for UI badges |
 
 ---
 
