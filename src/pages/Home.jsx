@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as pm from '../api/promptmate';
 import {
   Sparkles,
   Sun,
