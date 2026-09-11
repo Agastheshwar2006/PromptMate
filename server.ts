@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import multer from "multer";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -699,6 +700,48 @@ async function startServer() {
     res.json({ name: "PromptMate API", version: "1.0.0" });
   });
 
+  // Ensure legacy hashed bundle requests (e.g. index-BjYxqZzU.js) receive the working bundle
+  app.use("/assets", (req, res, next) => {
+    const distAssets = path.join(process.cwd(), "dist", "assets");
+    if (fs.existsSync(distAssets)) {
+      const reqFile = path.basename(req.path);
+      const filePath = path.join(distAssets, reqFile);
+      if (fs.existsSync(filePath)) {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        return res.sendFile(filePath);
+      }
+      if (reqFile.endsWith(".js")) {
+        const files = fs.readdirSync(distAssets);
+        const latestJs = files.find((f) => f.startsWith("index-") && f.endsWith(".js"));
+        if (latestJs) {
+          res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          return res.sendFile(path.join(distAssets, latestJs));
+        }
+      }
+      if (reqFile.endsWith(".css")) {
+        const files = fs.readdirSync(distAssets);
+        const latestCss = files.find((f) => f.startsWith("index-") && f.endsWith(".css"));
+        if (latestCss) {
+          res.setHeader("Content-Type", "text/css; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          return res.sendFile(path.join(distAssets, latestCss));
+        }
+      }
+    }
+    next();
+  });
+
+  // Always disable cache on HTML documents so clients receive the fresh bundle tags
+  app.use((req, res, next) => {
+    if (req.path === "/" || req.path.endsWith(".html")) {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+    next();
+  });
+
   // Vite middleware in dev / Static files in prod
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -710,6 +753,7 @@ async function startServer() {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (_req, res) => {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

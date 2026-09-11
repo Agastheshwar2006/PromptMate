@@ -3,7 +3,6 @@ import {
   X,
   Trash2,
   Bookmark,
-  Clock,
   Search,
   FolderOpen,
 } from 'lucide-react';
