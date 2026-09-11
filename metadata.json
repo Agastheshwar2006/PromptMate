@@ -1,0 +1,10 @@
+{
+  "name": "PromptMate",
+  "description": "AI Prompt engineering agent that generates, enhances, and optimizes prompts across platforms",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
