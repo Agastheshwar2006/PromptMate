@@ -25,9 +25,13 @@ export default function PromptInput({
   };
 
   const handleVoiceTranscribe = (text) => {
-    setInput(text);
+    if (!text || !text.trim()) return;
+    setInput((prev) => {
+      const trimmed = (prev || '').trim();
+      return trimmed ? `${trimmed} ${text.trim()}` : text.trim();
+    });
     if (onVoiceTranscribed) {
-      onVoiceTranscribed(text);
+      onVoiceTranscribed(text.trim());
     }
   };
 

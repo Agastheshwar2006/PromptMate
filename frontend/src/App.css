@@ -520,7 +520,9 @@ body {
 /* Voice Input */
 .pm-voice-container {
   display: inline-flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
 }
 
 .pm-voice-controls {
@@ -531,59 +533,163 @@ body {
 
 .pm-mic-btn {
   background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.pm-mic-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--bg-surface);
+  box-shadow: 0 0 12px var(--primary-glow);
 }
 
 .pm-recording-active-box {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-active);
+  background: var(--bg-surface);
+  border: 1px solid var(--danger);
   padding: 4px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full, 9999px);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.25);
+  animation: pm-pulse-border 1.5s infinite;
 }
 
-.pm-recording-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+@keyframes pm-pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.pm-voice-wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+}
+
+.pm-wave-bar {
+  width: 3px;
   background: var(--danger);
-  transition: transform 0.1s ease;
+  border-radius: 2px;
+  transition: height 0.08s ease;
 }
 
 .pm-recording-timer {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  color: var(--text-main);
+  font-weight: 600;
+  color: var(--danger);
+  letter-spacing: 0.5px;
 }
 
-.pm-stop-btn {
-  background: var(--danger);
+.pm-voice-live-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.pm-voice-recording-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-voice-done-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #10b981;
   color: #ffffff;
   border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.pm-voice-done-btn:hover {
+  opacity: 0.9;
+}
+
+.pm-voice-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pm-voice-cancel-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
 }
 
 .pm-transcribing-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
-  color: var(--text-muted);
-  background: var(--bg-elevated);
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  background: var(--bg-surface);
+  padding: 5px 12px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--border-active);
+  box-shadow: 0 0 10px var(--primary-glow);
 }
 
-.pm-voice-error {
-  position: absolute;
-  bottom: -24px;
-  left: 0;
+.pm-voice-error-banner {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 11px;
-  color: var(--danger);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  max-width: 320px;
+}
+
+.pm-voice-error-text {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.pm-voice-error-dismiss {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.pm-voice-error-dismiss:hover {
+  opacity: 1;
 }
 
 /* Output Card */

@@ -561,6 +561,51 @@ async function startServer() {
     res.json(newTemplate);
   });
 
+function detectAudioMimeType(buffer: Buffer, fallbackHeaderMime?: string): string {
+  if (buffer && buffer.length >= 4) {
+    // WebM / Matroska: 1A 45 DF A3
+    if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
+      return "audio/webm";
+    }
+    // WAV: RIFF .... WAVE
+    if (
+      buffer[0] === 0x52 &&
+      buffer[1] === 0x49 &&
+      buffer[2] === 0x46 &&
+      buffer[3] === 0x46 &&
+      buffer.length >= 12 &&
+      buffer.toString("ascii", 8, 12) === "WAVE"
+    ) {
+      return "audio/wav";
+    }
+    // OGG: OggS
+    if (buffer[0] === 0x4f && buffer[1] === 0x67 && buffer[2] === 0x67 && buffer[3] === 0x53) {
+      return "audio/ogg";
+    }
+    // MP4 / M4A: .... ftyp
+    if (buffer.length >= 8 && buffer.toString("ascii", 4, 8) === "ftyp") {
+      return "audio/mp4";
+    }
+    // MP3: ID3 or sync frame
+    if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) {
+      return "audio/mp3";
+    }
+    if (buffer[0] === 0xff && (buffer[1] === 0xfb || buffer[1] === 0xf3 || buffer[1] === 0xf2)) {
+      return "audio/mp3";
+    }
+    // FLAC: fLaC
+    if (buffer[0] === 0x66 && buffer[1] === 0x4c && buffer[2] === 0x61 && buffer[3] === 0x43) {
+      return "audio/flac";
+    }
+  }
+
+  const raw = (fallbackHeaderMime || "").split(";")[0].trim().toLowerCase();
+  if (raw.startsWith("audio/")) {
+    return raw;
+  }
+  return "audio/webm";
+}
+
   // Speech Transcription via Gemini
   app.post("/api/speech/transcribe", upload.single("file"), async (req, res) => {
     try {
@@ -568,8 +613,10 @@ async function startServer() {
         return res.status(400).json({ detail: "No audio file received" });
       }
 
-      const rawMime = (req.file.mimetype || "audio/webm").split(";")[0].trim().toLowerCase();
-      const mimeType = rawMime.startsWith("audio/") ? rawMime : "audio/webm";
+      const mimeType = detectAudioMimeType(
+        req.file.buffer,
+        (req.body?.mime_type as string) || req.file.mimetype
+      );
       const base64Audio = req.file.buffer.toString("base64");
       const ai = getGeminiClient();
 
@@ -578,9 +625,9 @@ async function startServer() {
       }
 
       const candidateModels = getOrderedCandidateModels([
-        "gemini-3.5-transcribe",
-        "gemini-3.1-flash-lite",
         "gemini-3.8-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-3.5-transcribe",
       ]);
 
       let transcribedText = "";
@@ -635,8 +682,10 @@ async function startServer() {
         return res.status(400).json({ detail: "No audio file received" });
       }
 
-      const rawMime = (req.file.mimetype || "audio/webm").split(";")[0].trim().toLowerCase();
-      const mimeType = rawMime.startsWith("audio/") ? rawMime : "audio/webm";
+      const mimeType = detectAudioMimeType(
+        req.file.buffer,
+        (req.body?.mime_type as string) || req.file.mimetype
+      );
       const base64Audio = req.file.buffer.toString("base64");
       const ai = getGeminiClient();
 
@@ -645,9 +694,9 @@ async function startServer() {
       }
 
       const candidateModels = getOrderedCandidateModels([
-        "gemini-3.5-transcribe",
-        "gemini-3.1-flash-lite",
         "gemini-3.8-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-3.5-transcribe",
       ]);
       let text = "";
       let lastErr = null;

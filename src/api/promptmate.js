@@ -208,7 +208,18 @@ export async function deleteSavedItem(id) {
 
 export async function transcribeAudio(audioBlob) {
   const formData = new FormData();
-  formData.append('file', audioBlob, 'recording.wav');
+  const rawType = (audioBlob?.type || '').split(';')[0].trim().toLowerCase();
+  let filename = 'recording.webm';
+  if (rawType.includes('wav')) filename = 'recording.wav';
+  else if (rawType.includes('ogg')) filename = 'recording.ogg';
+  else if (rawType.includes('mp4') || rawType.includes('m4a')) filename = 'recording.mp4';
+  else if (rawType.includes('mp3') || rawType.includes('mpeg')) filename = 'recording.mp3';
+
+  formData.append('file', audioBlob, filename);
+  if (rawType) {
+    formData.append('mime_type', rawType);
+  }
+
   const res = await api.post('/speech/transcribe', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 30000,
