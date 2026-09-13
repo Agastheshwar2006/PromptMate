@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Copy, Check, Bookmark, Sparkles, Sliders, Layers } from 'lucide-react';
+import { Copy, Check, Bookmark, Sparkles, Sliders, Layers, ArrowUpRight, Zap } from 'lucide-react';
 import PlatformToggles from './PlatformToggles';
+import { PLATFORMS, copyAndRedirectToPlatform } from '../utils/platformLaunch';
 
 export default function PromptOutput({
   data,
@@ -9,9 +10,11 @@ export default function PromptOutput({
   onRefine,
   isRefining,
   error,
+  onToast,
 }) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('full'); // 'full' | 'platform'
+  const [quickLaunchActive, setQuickLaunchActive] = useState(null);
 
   if (error) {
     return (
@@ -28,7 +31,26 @@ export default function PromptOutput({
     if (!data.generated_prompt) return;
     navigator.clipboard.writeText(data.generated_prompt);
     setCopied(true);
+    if (onToast) onToast('Prompt copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleQuickLaunch = async (platformId) => {
+    if (!data.generated_prompt) return;
+    try {
+      setQuickLaunchActive(platformId);
+      const result = await copyAndRedirectToPlatform(platformId, data.generated_prompt);
+
+      const msg = result.supportsUrlParam
+        ? `Prompt copied & opening ${result.platform.name} with auto-fill!`
+        : `Prompt copied to clipboard! Opening ${result.platform.name} (paste with Ctrl+V)`;
+
+      if (onToast) onToast(msg);
+      setTimeout(() => setQuickLaunchActive(null), 2000);
+    } catch (e) {
+      console.error('Quick launch error:', e);
+      setQuickLaunchActive(null);
+    }
   };
 
   const REFINEMENT_OPTIONS = [
@@ -72,6 +94,28 @@ export default function PromptOutput({
         </div>
       </div>
 
+      {/* Quick Launch & Auto-Paste Bar */}
+      <div className="pm-quick-launch-bar">
+        <div className="pm-quick-launch-label">
+          <Zap size={13} className="pm-text-accent" />
+          <span>Launch & Auto-Paste:</span>
+        </div>
+        <div className="pm-quick-launch-pills">
+          {PLATFORMS.slice(0, 6).map((plat) => (
+            <button
+              key={plat.id}
+              type="button"
+              className={`pm-quick-pill ${quickLaunchActive === plat.id ? 'pm-quick-pill-active' : ''}`}
+              onClick={() => handleQuickLaunch(plat.id)}
+              title={`Click to copy prompt and open ${plat.name} in a new tab`}
+            >
+              <span>{plat.name}</span>
+              <ArrowUpRight size={11} className="pm-quick-arrow" />
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="pm-output-tabs">
         <button
           type="button"
@@ -87,7 +131,7 @@ export default function PromptOutput({
           onClick={() => setActiveTab('platform')}
         >
           <Layers size={14} />
-          <span>Platform Variations</span>
+          <span>Platform Variations & Redirect</span>
         </button>
       </div>
 
@@ -121,6 +165,7 @@ export default function PromptOutput({
         <PlatformToggles
           promptText={data.generated_prompt}
           rawInput={data.raw_input}
+          onToast={onToast}
         />
       )}
     </div>

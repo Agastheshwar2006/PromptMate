@@ -5,6 +5,7 @@ import {
   Bookmark,
   Search,
   FolderOpen,
+  Clock,
 } from 'lucide-react';
 import {
   getHistory,

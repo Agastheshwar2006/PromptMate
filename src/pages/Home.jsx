@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import * as pm from '../api/promptmate';
 import {
   Sparkles,
-  Sun,
-  Moon,
   Library,
 } from 'lucide-react';
 import PromptInput from '../components/PromptInput';
 import PromptOutput from '../components/PromptOutput';
 import HistoryPanel from '../components/HistoryPanel';
+import DesignSwitcher from '../components/DesignSwitcher';
 import { generatePrompt, savePrompt, getStats } from '../api/promptmate';
 
 export default function Home() {
-  const [theme, setTheme] = useState(() => {
+  const [design, setDesign] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pm_theme');
-      if (saved) return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+      const savedDesign = localStorage.getItem('pm_design');
+      if (savedDesign && ['obsidian', 'studio', 'amber'].includes(savedDesign)) {
+        return savedDesign;
+      }
+      const legacyTheme = localStorage.getItem('pm_theme');
+      if (legacyTheme === 'light') return 'studio';
+      return 'obsidian';
     }
-    return 'dark';
+    return 'obsidian';
   });
 
   const [generatedData, setGeneratedData] = useState(null);
@@ -32,13 +32,18 @@ export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [toastMessage, setToastMessage] = useState('');
 
+  // Synchronize design and themes
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('pm_theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-design', design);
+    const resolvedTheme = design === 'studio' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    localStorage.setItem('pm_design', design);
+    localStorage.setItem('pm_theme', resolvedTheme);
+  }, [design]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const handleSelectDesign = (newDesign) => {
+    setDesign(newDesign);
+    showToast(`Switched to ${newDesign.charAt(0).toUpperCase() + newDesign.slice(1)} Design`);
   };
 
   // Efficient count synchronization for library badge
@@ -64,7 +69,7 @@ export default function Home() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage('');
-    }, 2500);
+    }, 3000);
   };
 
   const handleGenerate = async (rawInput, categoryContext) => {
@@ -136,6 +141,12 @@ export default function Home() {
           </div>
 
           <div className="pm-header-actions">
+            {/* 3 Designs Switcher */}
+            <DesignSwitcher
+              currentDesign={design}
+              onSelectDesign={handleSelectDesign}
+            />
+
             <button
               type="button"
               className="pm-btn pm-btn-ghost pm-lib-toggle-btn"
@@ -148,15 +159,6 @@ export default function Home() {
                 <span className="pm-badge-count">{historyCount}</span>
               )}
             </button>
-
-            <button
-              type="button"
-              className="pm-btn pm-btn-icon"
-              onClick={toggleTheme}
-              aria-label="Toggle monochrome mode"
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
           </div>
         </div>
       </header>
@@ -168,7 +170,7 @@ export default function Home() {
           <div className="pm-hero-section">
             <h1 className="pm-hero-title">Precision Prompt Synthesis</h1>
             <p className="pm-hero-subtitle">
-              Transform raw intentions into robust, framework-aligned prompts tailored for ChatGPT, Claude, Gemini, Midjourney, and Sora.
+              Transform raw intentions into robust, framework-aligned prompts tailored for ChatGPT, Claude, Gemini, Perplexity, and Sora.
             </p>
           </div>
 
@@ -197,6 +199,7 @@ export default function Home() {
                 }
                 isRefining={isLoading}
                 error={error}
+                onToast={showToast}
               />
             </section>
           )}
